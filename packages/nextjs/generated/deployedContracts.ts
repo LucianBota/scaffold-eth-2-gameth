@@ -56,7 +56,12 @@ const contracts = {
             },
             {
               inputs: [],
-              name: "Roulette__InvalidBet",
+              name: "Roulette__InvalidBetNumbers",
+              type: "error",
+            },
+            {
+              inputs: [],
+              name: "Roulette__InvalidBetValues",
               type: "error",
             },
             {
@@ -92,16 +97,6 @@ const contracts = {
             },
             {
               inputs: [
-                {
-                  internalType: "uint256",
-                  name: "currentBalance",
-                  type: "uint256",
-                },
-                {
-                  internalType: "uint256",
-                  name: "totalPlayers",
-                  type: "uint256",
-                },
                 {
                   internalType: "uint256",
                   name: "totalBets",
@@ -305,6 +300,19 @@ const contracts = {
                 },
               ],
               stateMutability: "pure",
+              type: "function",
+            },
+            {
+              inputs: [],
+              name: "getTotalBets",
+              outputs: [
+                {
+                  internalType: "uint256",
+                  name: "",
+                  type: "uint256",
+                },
+              ],
+              stateMutability: "view",
               type: "function",
             },
             {

@@ -106,8 +106,9 @@ contract Roulette is Ownable, VRFConsumerBaseV2, KeeperCompatibleInterface {
 		if (msg.value <= 0) {
 			revert Roulette__NotEnoughETHEntered();
 		}
+		s_totalBets += msg.value;
 		if (
-			msg.value >
+			s_totalBets >
 			address(this).balance /
 				(END_NUMBERS_INTERVAL - START_NUMBERS_INTERVAL)
 		) {
@@ -132,7 +133,6 @@ contract Roulette is Ownable, VRFConsumerBaseV2, KeeperCompatibleInterface {
 		if (totalBet != msg.value) {
 			revert Roulette__InvalidBetValues();
 		}
-		s_totalBets += totalBet;
 		pushUniquePlayer(msg.sender);
 		// emit RouletteEnter(msg.sender);
 	}
@@ -200,6 +200,7 @@ contract Roulette is Ownable, VRFConsumerBaseV2, KeeperCompatibleInterface {
 		s_gameState = GameState.OPEN;
 		resetEntries();
 		delete s_players;
+		s_totalBets = 0;
 		s_lastWinningNumber = winningNumber;
 		s_lastTimeStamp = block.timestamp;
 		emit WinningNumberPicked(winningNumber);
@@ -224,6 +225,10 @@ contract Roulette is Ownable, VRFConsumerBaseV2, KeeperCompatibleInterface {
 
 	function getTotalPlayers() public view returns (uint256) {
 		return s_players.length;
+	}
+
+	function getTotalBets() public view returns (uint256) {
+		return s_totalBets;
 	}
 
 	function getLastWinningNumber() public view returns (uint8) {
