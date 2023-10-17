@@ -4,29 +4,41 @@
 
 :root,
 [data-theme] {
-  background: hsl(var(--b2));
+	background: hsl(var(--b2));
 }
 
 body {
-  min-height: 100vh;
+	min-height: 100vh;
 }
 
 h1,
 h2,
 h3,
 h4 {
-  margin-bottom: 0.5rem;
-  line-height: 1;
+	margin-bottom: 0.5rem;
+	line-height: 1;
 }
 
 p {
-  margin: 1rem 0;
+	margin: 1rem 0;
 }
 
 .btn {
-  @apply shadow-md;
+	@apply shadow-md;
 }
 
 .btn.btn-ghost {
-  @apply shadow-none;
+	@apply shadow-none;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+	-moz-appearance: textfield;
 }
