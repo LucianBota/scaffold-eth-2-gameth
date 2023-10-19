@@ -4,6 +4,7 @@ import OptionsTable from "./OptionsTable";
 import { Bet } from "~~/types/roulette/bets";
 
 const Board = (props: {
+	defaultTableCellValue: number[];
 	currentBetValue: number;
 	setBets: React.Dispatch<React.SetStateAction<Bet[]>>;
 }) => {
@@ -21,6 +22,7 @@ const Board = (props: {
 		<div className="flex justify-between min-w-[320px] max-w-[320px] my-10">
 			<div className="relative mt-[50px]">
 				<OptionsTable
+					defaultTableCellValue={props.defaultTableCellValue}
 					currentBetValue={props.currentBetValue}
 					setBets={props.setBets}
 					startNumber={startNumber}
@@ -31,6 +33,7 @@ const Board = (props: {
 			</div>
 			<div className="relative">
 				<NumbersTable
+					defaultTableCellValue={props.defaultTableCellValue}
 					currentBetValue={props.currentBetValue}
 					setBets={props.setBets}
 					startNumber={startNumber}
@@ -40,6 +43,7 @@ const Board = (props: {
 					blackNumbers={blackNumbers}
 				/>
 				<ColumnsTable
+					defaultTableCellValue={props.defaultTableCellValue}
 					currentBetValue={props.currentBetValue}
 					setBets={props.setBets}
 					startNumber={startNumber}

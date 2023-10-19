@@ -4,7 +4,11 @@ import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 
 import { Bet, BetBigInt } from "~~/types/roulette/bets";
 
-const PlaceBetButton = (props: { data: Bet[] }) => {
+const PlaceBetButton = (props: {
+	isDisabled: boolean;
+	data: Bet[];
+	resetBets: () => void;
+}) => {
 	const [totalBetsValue, setTotalBetsValue] = useState<number>(0);
 
 	const getTotalBetsValue = (entries: Bet[]): number => {
@@ -33,14 +37,14 @@ const PlaceBetButton = (props: { data: Bet[] }) => {
 		value: `${totalBetsValue}`,
 		onBlockConfirmation: (txnReceipt) => {
 			console.log("📦 Transaction blockHash", txnReceipt.blockHash);
-			window.location.reload();
+			props.resetBets();
 		},
 	});
 
 	return (
 		<button
 			className="btn btn-primary rounded-full capitalize font-normal font-white w-80 flex items-center gap-1 hover:gap-2 transition-all tracking-widest"
-			disabled={isLoading || totalBetsValue === 0}
+			disabled={props.isDisabled || isLoading || totalBetsValue === 0}
 			onClick={() => writeAsync()}
 		>
 			Place Bet ({totalBetsValue.toFixed(4)})

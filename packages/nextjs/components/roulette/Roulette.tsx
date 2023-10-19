@@ -7,6 +7,14 @@ import { Bet } from "~~/types/roulette/bets";
 const Roulette = () => {
 	const [currentBetValue, setCurrentBetValue] = useState<number>(0.1);
 	const [bets, setBets] = useState<Bet[]>([]);
+	const [defaultTableCellValue, setDefaultTableCellValue] = useState<number[]>([
+		0,
+	]);
+
+	const resetBets = () => {
+		setDefaultTableCellValue([0]);
+		setBets([]);
+	};
 
 	return (
 		<>
@@ -14,9 +22,14 @@ const Roulette = () => {
 				<Wheel
 					bets={bets}
 					currentBetValue={currentBetValue}
+					resetBets={resetBets}
 					setCurrentBetValue={setCurrentBetValue}
 				/>
-				<Board currentBetValue={currentBetValue} setBets={setBets} />
+				<Board
+					defaultTableCellValue={defaultTableCellValue}
+					currentBetValue={currentBetValue}
+					setBets={setBets}
+				/>
 			</div>
 		</>
 	);

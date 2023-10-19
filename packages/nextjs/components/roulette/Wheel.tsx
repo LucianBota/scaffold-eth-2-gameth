@@ -15,10 +15,12 @@ import targetSVG from "../../public/assets/target.svg";
 const Wheel = (props: {
 	bets: Bet[];
 	currentBetValue: number;
+	resetBets: () => void;
 	setCurrentBetValue: React.Dispatch<React.SetStateAction<number>>;
 }) => {
 	const [radius, setRadius] = useState<number>(0);
 	const [timeLeft, setTimeLeft] = useState<number>(0);
+	const [isRolling, setIsRolling] = useState<boolean>(false);
 
 	const wheelNumbers = [
 		0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5,
@@ -32,11 +34,15 @@ const Wheel = (props: {
 		functionName: "getInterval",
 	});
 
-	const { data: latestTimeStamp, refetch: refetchLatestTimeStamp } =
-		useScaffoldContractRead({
-			contractName: "Roulette",
-			functionName: "getLatestTimeStamp",
-		});
+	const { data: latestTimeStamp } = useScaffoldContractRead({
+		contractName: "Roulette",
+		functionName: "getLatestTimeStamp",
+	});
+
+	const { data: totalPlayers } = useScaffoldContractRead({
+		contractName: "Roulette",
+		functionName: "getTotalPlayers",
+	});
 
 	const rollWheel = (number: number) => {
 		setRadius(
@@ -56,8 +62,11 @@ const Wheel = (props: {
 				const { winningNumber } = log.args;
 				console.log("📡 WinningNumberPicked event", winningNumber);
 				if (winningNumber) {
+					setIsRolling(true);
 					rollWheel(winningNumber);
-					refetchLatestTimeStamp();
+					setTimeout(() => {
+						setIsRolling(false);
+					}, 15000);
 				}
 			});
 		},
@@ -74,6 +83,7 @@ const Wheel = (props: {
 			if (timeLeft > 0) {
 				setTimeLeft(--timeLeft);
 			} else {
+				setTimeLeft(0);
 				clearInterval(intervalID);
 			}
 		}, 1000);
@@ -89,11 +99,23 @@ const Wheel = (props: {
 				<Image className="rotate-180" alt="target-image" fill src={targetSVG} />
 			</div>
 			<div className="flex items-center justify-center relative max-w-[540px] max-h-[540px] w-full aspect-square overflow-hidden">
-				<p className="w-1/2 text-2xl pb-10 text-center">
-					Next spin in:
-					<br />
-					<span className="text-6xl">{secondsToMMSS(timeLeft)}</span>
-				</p>
+				{isRolling ? (
+					<p className="w-1/2 text-2xl pb-2 text-center">
+						Extracting number...
+					</p>
+				) : totalPlayers === 0n ? (
+					<p className="w-1/2 text-2xl pb-2 text-center">
+						Waiting for players...
+					</p>
+				) : timeLeft ? (
+					<p className="w-1/2 text-2xl pb-10 text-center">
+						Next spin in:
+						<br />
+						<span className="text-6xl">{secondsToMMSS(timeLeft)}</span>
+					</p>
+				) : (
+					<p className="w-1/2 text-2xl pb-2 text-center">Calculating...</p>
+				)}
 				<Image
 					className="aspect-square"
 					alt="roulette-image"
@@ -109,7 +131,11 @@ const Wheel = (props: {
 				/>
 			</div>
 			<div className="mt-10">
-				<PlaceBetButton data={props.bets} />
+				<PlaceBetButton
+					isDisabled={!!totalPlayers && !timeLeft}
+					data={props.bets}
+					resetBets={props.resetBets}
+				/>
 				<BetValueInput
 					currentBetValue={props.currentBetValue}
 					setCurrentBetValue={props.setCurrentBetValue}

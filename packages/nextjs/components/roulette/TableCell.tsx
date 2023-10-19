@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import PlacedBet from "./PlacedBet";
 import { Bet } from "~~/types/roulette/bets";
 import { CellColor } from "~~/enums/roulette";
 
 const TableCell = (props: {
+	defaultValue: number[];
 	currentBetValue: number;
 	setBets: React.Dispatch<React.SetStateAction<Bet[]>>;
 	colSpan: number;
@@ -13,6 +14,11 @@ const TableCell = (props: {
 	text?: string | null;
 }) => {
 	const [totalCellBetValue, setTotalCellBetValue] = useState<number>(0);
+
+	useEffect(() => {
+		setTotalCellBetValue(props.defaultValue[0]);
+	}, [props.defaultValue]);
+
 	return (
 		<div
 			className={`flex justify-center items-center text-2xl`}

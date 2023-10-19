@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 error Roulette__NotEnoughETHEntered();
 error Roulette__ToMuchETHEntered();
 error Roulette__NotOpen();
+error Roulette__ToManyPlayers();
 error Roulette__InvalidBetNumbers();
 error Roulette__InvalidBetValues();
 error Roulette__TransferFailed(address receiver);
@@ -34,7 +35,7 @@ contract Roulette is Ownable, VRFConsumerBaseV2, KeeperCompatibleInterface {
 		uint256 value;
 	}
 
-	/* State Variables */
+	/* Chainlink Variables */
 	VRFCoordinatorV2Interface private immutable i_vrfCoordinator;
 	bytes32 private immutable i_gasLane;
 	uint64 private immutable i_subscriptionId;
@@ -42,30 +43,36 @@ contract Roulette is Ownable, VRFConsumerBaseV2, KeeperCompatibleInterface {
 	uint16 private constant REQUEST_CONFIRMATIONS = 3;
 	uint32 private constant NUM_WORDS = 1;
 
-	/* Lottery Valiables */
+	/* Roulette Valiables */
 	mapping(uint8 => mapping(address => uint256)) private s_entries;
 	address[] private s_players;
 	uint256 private s_totalBets;
 	uint8 private s_lastWinningNumber;
 	GameState private s_gameState;
 	uint256 private s_lastTimeStamp;
+	uint256 private immutable i_minBetValue;
+	uint256 private immutable i_maxPlayers;
 	uint256 private immutable i_interval;
 	uint8 private constant START_NUMBERS_INTERVAL = 0;
 	uint8 private constant END_NUMBERS_INTERVAL = 36;
 
 	/* Events */
-	// event RouletteEnter(address indexed player);
+	event RouletteEnter(address indexed player);
 	event RequestedRouletteWinner(uint256 indexed requestId);
 	event WinningNumberPicked(uint8 indexed winningNumber);
 
 	constructor(
 		address vrfCoordinatorV2,
+		uint256 minBetValue,
+		uint256 maxPlayers,
 		bytes32 gasLane,
 		uint64 subscriptionId,
 		uint32 callbackGasLimit,
 		uint256 interval
 	) VRFConsumerBaseV2(vrfCoordinatorV2) {
 		i_vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinatorV2);
+		i_minBetValue = minBetValue;
+		i_maxPlayers = maxPlayers;
 		i_gasLane = gasLane;
 		i_subscriptionId = subscriptionId;
 		i_callbackGasLimit = callbackGasLimit;
@@ -83,6 +90,9 @@ contract Roulette is Ownable, VRFConsumerBaseV2, KeeperCompatibleInterface {
 			}
 		}
 		if (!exists) {
+			if (s_players.length >= i_maxPlayers) {
+				revert Roulette__ToManyPlayers();
+			}
 			s_players.push(newAddress);
 		}
 	}
@@ -100,7 +110,7 @@ contract Roulette is Ownable, VRFConsumerBaseV2, KeeperCompatibleInterface {
 	}
 
 	function enterRoulette(PlayerEntry[] memory playerEntries) public payable {
-		if (msg.value <= 0) {
+		if (msg.value < i_minBetValue) {
 			revert Roulette__NotEnoughETHEntered();
 		}
 		s_totalBets += msg.value;
@@ -131,7 +141,7 @@ contract Roulette is Ownable, VRFConsumerBaseV2, KeeperCompatibleInterface {
 			revert Roulette__InvalidBetValues();
 		}
 		pushUniquePlayer(msg.sender);
-		// emit RouletteEnter(msg.sender);
+		emit RouletteEnter(msg.sender);
 	}
 
 	/**
@@ -139,8 +149,8 @@ contract Roulette is Ownable, VRFConsumerBaseV2, KeeperCompatibleInterface {
 	 * they look for `upkeepNeeded` to return True.
 	 * the following should be true for this to return true:
 	 * 1. The time interval has passed between roulette runs.
-	 * 2. The lottery is open.
-	 * 3. The contract has ETH.
+	 * 2. The game is open.
+	 * 3. The game has bets.
 	 * 4. Implicity, your subscription is funded with LINK.
 	 */
 	function checkUpkeep(
@@ -220,8 +230,16 @@ contract Roulette is Ownable, VRFConsumerBaseV2, KeeperCompatibleInterface {
 		return s_players[index];
 	}
 
+	function getMaxPlayers() public view returns (uint256) {
+		return i_maxPlayers;
+	}
+
 	function getTotalPlayers() public view returns (uint256) {
 		return s_players.length;
+	}
+
+	function getMinBetValue() public view returns (uint256) {
+		return i_minBetValue;
 	}
 
 	function getTotalBets() public view returns (uint256) {

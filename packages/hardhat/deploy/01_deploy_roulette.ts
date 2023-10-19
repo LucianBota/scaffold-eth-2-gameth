@@ -48,12 +48,16 @@ const deployRoulette: DeployFunction = async function (
 		subscriptionId = networkConfig[chainId].subscriptionId;
 	}
 
+	const minBetValue = networkConfig[chainId].minBetValue;
+	const maxPlayers = networkConfig[chainId].maxPlayers;
 	const gasLane = networkConfig[chainId].gasLane;
 	const callbackGasLimit = networkConfig[chainId].callbackGasLimit;
 	const interval = networkConfig[chainId].interval;
 
 	const args = [
 		vrfCoordinatorV2Address,
+		minBetValue,
+		maxPlayers,
 		gasLane,
 		subscriptionId,
 		callbackGasLimit,

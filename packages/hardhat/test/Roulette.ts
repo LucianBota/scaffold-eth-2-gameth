@@ -1,5 +1,5 @@
 import { assert, expect } from "chai";
-import { deployments, ethers, getNamedAccounts, network } from "hardhat";
+import { deployments, ethers, network } from "hardhat";
 import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
@@ -16,6 +16,8 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 				vrfCoordinatorV2Mock: VRFCoordinatorV2Mock,
 				deployer: SignerWithAddress,
 				accounts: SignerWithAddress[],
+				minBetValue: BigNumber,
+				maxPlayers: BigNumber,
 				interval: BigNumber,
 				chainId: number;
 
@@ -28,12 +30,14 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 				//send 10 ETH from deployer to roulette contract
 				await deployer.sendTransaction({
 					to: roulette.address,
-					value: ethers.utils.parseEther("10.0"),
+					value: ethers.utils.parseEther("100.0"),
 				});
 				vrfCoordinatorV2Mock = await ethers.getContract(
 					"VRFCoordinatorV2Mock",
 					deployer.address
 				);
+				minBetValue = await roulette.getMinBetValue();
+				maxPlayers = await roulette.getMaxPlayers();
 				interval = await roulette.getInterval();
 				chainId = network.config.chainId!;
 			});
@@ -43,6 +47,14 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 					// Ideally just 1 assert per "it"
 					const rouletteState = await roulette.getGameState();
 					assert.equal(rouletteState.toString(), "0");
+					assert.equal(
+						minBetValue.toString(),
+						networkConfig[chainId]["minBetValue"].toString()
+					);
+					assert.equal(
+						maxPlayers.toString(),
+						networkConfig[chainId]["maxPlayers"]
+					);
 					assert.equal(interval.toString(), networkConfig[chainId]["interval"]);
 				});
 			});
@@ -52,7 +64,7 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 					await expect(roulette.enterRoulette([])).to.be.reverted;
 					await expect(
 						roulette.enterRoulette([{ number: 1, value: 1 }], {
-							value: "0",
+							value: "1",
 						})
 					).to.be.reverted;
 					await expect(
@@ -64,16 +76,16 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 						roulette.enterRoulette(
 							[
 								{ number: 1, value: 1 },
-								{ number: 2, value: 2 },
+								{ number: 2, value: minBetValue.sub(2) },
 							],
 							{
-								value: "2",
+								value: minBetValue.sub(1),
 							}
 						)
 					).to.be.reverted;
 				});
 				it("reverts if to much ETH entered", async function () {
-					const bet = ethers.utils.parseEther((10 / 36 + 1).toString());
+					const bet = ethers.utils.parseEther((100 / 36 + 1).toString());
 					await expect(
 						roulette.enterRoulette([{ number: 1, value: bet }], {
 							value: bet,
@@ -81,8 +93,8 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 					).to.be.reverted;
 				});
 				it("reverts if game not open", async function () {
-					await roulette.enterRoulette([{ number: 1, value: 1 }], {
-						value: "1",
+					await roulette.enterRoulette([{ number: 1, value: minBetValue }], {
+						value: minBetValue,
 					});
 					await network.provider.send("evm_increaseTime", [
 						interval.toNumber() + 1,
@@ -91,22 +103,47 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 					// We pretend to be a Chainlink Keeper
 					await roulette.performUpkeep([]);
 					await expect(
-						roulette.enterRoulette([{ number: 1, value: 1 }], {
-							value: "1",
+						roulette.enterRoulette([{ number: 1, value: minBetValue }], {
+							value: minBetValue,
 						})
 					).to.be.reverted;
 				});
 				it("reverts if invalid bet numbers", async function () {
 					await expect(
-						roulette.enterRoulette([{ number: 37, value: 1 }], {
-							value: "1",
+						roulette.enterRoulette([{ number: 37, value: minBetValue }], {
+							value: minBetValue,
 						})
 					).to.be.reverted;
 				});
 				it("reverts if invalid bet values", async function () {
 					await expect(
-						roulette.enterRoulette([{ number: 1, value: 1 }], {
-							value: "2",
+						roulette.enterRoulette([{ number: 1, value: minBetValue }], {
+							value: minBetValue.add(1),
+						})
+					).to.be.reverted;
+				});
+				it("reverts if to many players", async function () {
+					for (let i = 1; i <= 10; i++) {
+						roulette = rouletteContract.connect(accounts[i]);
+						await roulette.enterRoulette(
+							[
+								{
+									number: 1,
+									value: minBetValue,
+								},
+							],
+							{
+								value: minBetValue,
+							}
+						);
+					}
+					await roulette.enterRoulette([{ number: 1, value: minBetValue }], {
+						value: minBetValue,
+					});
+					roulette = rouletteContract.connect(accounts[11]);
+					await expect(
+						roulette.enterRoulette([{ number: 1, value: minBetValue }], {
+							value: minBetValue,
 						})
 					).to.be.reverted;
 				});
@@ -114,8 +151,8 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 					// enter deployer
 					let totalPlayers = await roulette.getTotalPlayers();
 					expect(totalPlayers).to.equal(BigNumber.from(0));
-					await roulette.enterRoulette([{ number: 1, value: 1 }], {
-						value: "1",
+					await roulette.enterRoulette([{ number: 1, value: minBetValue }], {
+						value: minBetValue,
 					});
 					totalPlayers = await roulette.getTotalPlayers();
 					expect(totalPlayers).to.equal(BigNumber.from(1));
@@ -126,8 +163,8 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 
 					// enter account1
 					roulette = rouletteContract.connect(accounts[1]);
-					await roulette.enterRoulette([{ number: 1, value: 1 }], {
-						value: "1",
+					await roulette.enterRoulette([{ number: 1, value: minBetValue }], {
+						value: minBetValue,
 					});
 					totalPlayers = await roulette.getTotalPlayers();
 					expect(totalPlayers).to.equal(BigNumber.from(2));
@@ -138,13 +175,20 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 
 					// enter deployer again
 					roulette = rouletteContract.connect(deployer);
-					await roulette.enterRoulette([{ number: 1, value: 1 }], {
-						value: "1",
+					await roulette.enterRoulette([{ number: 1, value: minBetValue }], {
+						value: minBetValue,
 					});
 					totalPlayers = await roulette.getTotalPlayers();
 					expect(totalPlayers).to.equal(BigNumber.from(2));
 					assert.equal(await roulette.getPlayer(0), deployer.address);
 					assert.equal(await roulette.getPlayer(1), accounts[1].address);
+				});
+				it("emits RouletteEnter event", async function () {
+					await expect(
+						roulette.enterRoulette([{ number: 1, value: minBetValue }], {
+							value: minBetValue,
+						})
+					).to.emit(roulette, "RouletteEnter");
 				});
 			});
 
@@ -158,8 +202,8 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 					assert(!upkeepNeeded);
 				});
 				it("returns false if roulette isn't open", async function () {
-					await roulette.enterRoulette([{ number: 1, value: 1 }], {
-						value: "1",
+					await roulette.enterRoulette([{ number: 1, value: minBetValue }], {
+						value: minBetValue,
 					});
 					await network.provider.send("evm_increaseTime", [
 						interval.toNumber() + 1,
@@ -172,8 +216,8 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 					assert(!upkeepNeeded);
 				});
 				it("returns false if enough time hasn't passed", async function () {
-					await roulette.enterRoulette([{ number: 1, value: 1 }], {
-						value: "1",
+					await roulette.enterRoulette([{ number: 1, value: minBetValue }], {
+						value: minBetValue,
 					});
 					await network.provider.send("evm_increaseTime", [
 						interval.toNumber() - 5,
@@ -183,8 +227,8 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 					assert(!upkeepNeeded);
 				});
 				it("returns true if enough time has passed, has bets, and is open", async function () {
-					await roulette.enterRoulette([{ number: 1, value: 1 }], {
-						value: "1",
+					await roulette.enterRoulette([{ number: 1, value: minBetValue }], {
+						value: minBetValue,
 					});
 					await network.provider.send("evm_increaseTime", [
 						interval.toNumber() + 1,
@@ -197,8 +241,8 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 
 			describe("performUpkeep", function () {
 				it("can only run if checkupkeep is true", async function () {
-					await roulette.enterRoulette([{ number: 1, value: 1 }], {
-						value: "1",
+					await roulette.enterRoulette([{ number: 1, value: minBetValue }], {
+						value: minBetValue,
 					});
 					await network.provider.send("evm_increaseTime", [
 						interval.toNumber() + 1,
@@ -211,8 +255,8 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 					await expect(roulette.performUpkeep([])).to.be.reverted;
 				});
 				it("updates the game state, emits an event, and calls the vrf coodrinator", async function () {
-					await roulette.enterRoulette([{ number: 1, value: 1 }], {
-						value: "1",
+					await roulette.enterRoulette([{ number: 1, value: minBetValue }], {
+						value: minBetValue,
 					});
 					await network.provider.send("evm_increaseTime", [
 						interval.toNumber() + 1,
@@ -232,8 +276,8 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 
 			describe("fulfillRandomWords", function () {
 				beforeEach(async function () {
-					await roulette.enterRoulette([{ number: 1, value: 1 }], {
-						value: "1",
+					await roulette.enterRoulette([{ number: 1, value: minBetValue }], {
+						value: minBetValue,
 					});
 					await network.provider.send("evm_increaseTime", [
 						interval.toNumber() + 1,
@@ -249,12 +293,25 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 					).to.be.revertedWith("nonexistent request");
 				});
 				it("picks a winning number, sends the money, and resets the roulette", async function () {
-					// player 4 bet on number 4, player 5 bet on number 5
-					for (let i = 4; i <= 5; i++) {
+					// send more ether to roulette contract
+					await deployer.sendTransaction({
+						to: roulette.address,
+						value: ethers.utils.parseEther("900.0"),
+					});
+					const numbers = Array.from({ length: 37 }, (_, index) => index); //array with numbers from 0 to 36
+					// deployer already has bet
+					// players from 1 to 9 bet 1000 on their number and 1 on the others
+					for (let i = 1; i < 10; i++) {
 						roulette = rouletteContract.connect(accounts[i]);
-						await roulette.enterRoulette([{ number: i, value: i + 1 }], {
-							value: i + 1,
-						});
+						await roulette.enterRoulette(
+							numbers.map((n) => ({
+								number: n,
+								value: n === i ? minBetValue.mul(i) : 1,
+							})),
+							{
+								value: minBetValue.mul(i).add(numbers.length - 1),
+							}
+						);
 					}
 
 					const startingTimeStamp = await roulette.getLatestTimeStamp();
@@ -280,16 +337,20 @@ import { developmentChains, networkConfig } from "../helper-hardhat-config";
 								assert.equal(totalPlayers.toString(), "0");
 								assert(endingTimeStamp > startingTimeStamp);
 
-								for (let i = 4; i <= 5; i++) {
+								for (let i = 1; i < 10; i++) {
 									if (i === lastWinningNumber) {
 										assert.equal(
 											accountsEndingBalance[i].toString(),
-											accountsStartingBalance[i].add((i + 1) * 36).toString()
+											accountsStartingBalance[i]
+												.add(minBetValue.mul(i).mul(numbers.length - 1))
+												.toString()
 										);
 									} else {
 										assert.equal(
 											accountsEndingBalance[i].toString(),
-											accountsStartingBalance[i].toString()
+											accountsStartingBalance[i]
+												.add(numbers.length - 1)
+												.toString()
 										);
 									}
 								}

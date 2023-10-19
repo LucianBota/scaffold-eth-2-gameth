@@ -5,6 +5,7 @@ import { Bet } from "~~/types/roulette/bets";
 import { CellColor } from "~~/enums/roulette";
 
 const NumbersTable = (props: {
+	defaultTableCellValue: number[];
 	currentBetValue: number;
 	setBets: React.Dispatch<React.SetStateAction<Bet[]>>;
 	startNumber: number;
@@ -85,6 +86,7 @@ const NumbersTable = (props: {
 							return (
 								<TableCell
 									key={cellIndex}
+									defaultValue={props.defaultTableCellValue}
 									currentBetValue={props.currentBetValue}
 									setBets={props.setBets}
 									color={
