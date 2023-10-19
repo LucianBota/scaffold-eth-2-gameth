@@ -5,7 +5,7 @@ const contracts = {
       name: "localhost",
       contracts: {
         Roulette: {
-          address: "0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44",
+          address: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
           abi: [
             {
               inputs: [
