@@ -5,7 +5,7 @@ const BetValueInput = (props: {
 	setCurrentBetValue: React.Dispatch<React.SetStateAction<number>>;
 }) => {
 	const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-		const numericValue = Number(Number(e.target.value).toFixed(2));
+		const numericValue = Number(Number(e.target.value).toFixed(1));
 		props.setCurrentBetValue(numericValue);
 	};
 

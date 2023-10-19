@@ -1153,7 +1153,7 @@ const contracts = {
       name: "sepolia",
       contracts: {
         Roulette: {
-          address: "0xfcebef158be0a1d77c369c23655eb49771146610",
+          address: "0xB00ab6ADc41f3F4B2e50334095AA60643c86cD67",
           abi: [
             {
               inputs: [
@@ -1161,6 +1161,16 @@ const contracts = {
                   internalType: "address",
                   name: "vrfCoordinatorV2",
                   type: "address",
+                },
+                {
+                  internalType: "uint256",
+                  name: "minBetValue",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "maxPlayers",
+                  type: "uint256",
                 },
                 {
                   internalType: "bytes32",
@@ -1229,6 +1239,11 @@ const contracts = {
             },
             {
               inputs: [],
+              name: "Roulette__ToManyPlayers",
+              type: "error",
+            },
+            {
+              inputs: [],
               name: "Roulette__ToMuchETHEntered",
               type: "error",
             },
@@ -1289,6 +1304,19 @@ const contracts = {
                 },
               ],
               name: "RequestedRouletteWinner",
+              type: "event",
+            },
+            {
+              anonymous: false,
+              inputs: [
+                {
+                  indexed: true,
+                  internalType: "address",
+                  name: "player",
+                  type: "address",
+                },
+              ],
+              name: "RouletteEnter",
               type: "event",
             },
             {
@@ -1395,6 +1423,32 @@ const contracts = {
             {
               inputs: [],
               name: "getLatestTimeStamp",
+              outputs: [
+                {
+                  internalType: "uint256",
+                  name: "",
+                  type: "uint256",
+                },
+              ],
+              stateMutability: "view",
+              type: "function",
+            },
+            {
+              inputs: [],
+              name: "getMaxPlayers",
+              outputs: [
+                {
+                  internalType: "uint256",
+                  name: "",
+                  type: "uint256",
+                },
+              ],
+              stateMutability: "view",
+              type: "function",
+            },
+            {
+              inputs: [],
+              name: "getMinBetValue",
               outputs: [
                 {
                   internalType: "uint256",
