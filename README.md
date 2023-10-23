@@ -1,19 +1,14 @@
-# 🏗 Scaffold-ETH 2
+# 🏗 GamETH Roulette
 
-<h4 align="center">
-  <a href="https://docs.scaffoldeth.io">Documentation</a> |
-  <a href="https://scaffoldeth.io">Website</a>
-</h4>
+🧪 A public, totally decentralized, and fair roulette betting game, developed for the Ethereum blockchain.
 
-🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on the Ethereum blockchain. It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts.
-
-⚙️ Built using NextJS, RainbowKit, Hardhat, Wagmi, and Typescript.
+⚙️ Built using Scaffold-eth2, Solidity, Smart Contracts, Hardhat, Ethers.js, Chainlink, OpenZeppelin, JavaScript, TypeScript, and React.js and Next.js.
 
 - ✅ **Contract Hot Reload**: Your frontend auto-adapts to your smart contract as you edit it.
 - 🔥 **Burner Wallet & Local Faucet**: Quickly test your application with a burner wallet and local faucet.
 - 🔐 **Integration with Wallet Providers**: Connect to different wallet providers and interact with the Ethereum network.
 
-![Debug Contracts tab](https://github.com/scaffold-eth/scaffold-eth-2/assets/55535804/1171422a-0ce4-4203-bcd4-d2d1941d198b)
+![Roulette Preview](https://github.com/LucianBota/scaffold-eth-2-gameth/assets/roulette-preview.png)
 
 ## Requirements
 
@@ -25,12 +20,12 @@ Before you begin, you need to install the following tools:
 
 ## Quickstart
 
-To get started with Scaffold-ETH 2, follow the steps below:
+To get started with the GamETH Roulette, follow the steps below:
 
 1. Clone this repo & install dependencies
 
 ```
-git clone https://github.com/scaffold-eth/scaffold-eth-2.git
+git clone https://github.com/LucianBota/scaffold-eth-2-gameth.git
 cd scaffold-eth-2
 yarn install
 ```
@@ -61,11 +56,11 @@ Visit your app on: `http://localhost:3000`. You can interact with your smart con
 
 Run smart contract test with `yarn hardhat:test`
 
-- Edit your smart contract `YourContract.sol` in `packages/hardhat/contracts`
+- Edit your smart contract `Roulette.sol` in `packages/hardhat/contracts`
 - Edit your frontend in `packages/nextjs/pages`
 - Edit your deployment scripts in `packages/hardhat/deploy`
 
-## Documentation
+## Scaffold-ETH 2 Documentation
 
 Visit our [docs](https://docs.scaffoldeth.io) to learn how to start building with Scaffold-ETH 2.
 
