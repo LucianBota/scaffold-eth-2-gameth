@@ -8,7 +8,7 @@
 - 🔥 **Burner Wallet & Local Faucet**: Quickly test your application with a burner wallet and local faucet.
 - 🔐 **Integration with Wallet Providers**: Connect to different wallet providers and interact with the Ethereum network.
 
-![Roulette Preview](https://github.com/LucianBota/scaffold-eth-2-gameth/assets/roulette-preview.png)
+![Roulette Preview](https://raw.githubusercontent.com/LucianBota/scaffold-eth-2-gameth/main/assets/roulette-preview.png)
 
 ## Requirements
 
