@@ -26,7 +26,7 @@ To get started with the GamETH Roulette, follow the steps below:
 
 ```
 git clone https://github.com/LucianBota/scaffold-eth-2-gameth.git
-cd scaffold-eth-2
+cd scaffold-eth-2-gameth
 yarn install
 ```
 
